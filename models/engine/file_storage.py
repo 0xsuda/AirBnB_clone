@@ -1,8 +1,4 @@
-#!/usr/bin/python3
-"""Defines a class FileStorage.
-"""
 import json
-import os
 from models.base_model import BaseModel
 from models.user import User
 from models.state import State
@@ -10,7 +6,6 @@ from models.city import City
 from models.amenity import Amenity
 from models.place import Place
 from models.review import Review
-
 
 class FileStorage():
     """Class that serializes instances to a JSON file and deserializes
@@ -54,18 +49,21 @@ class FileStorage():
 
     def reload(self):
         """Deserializes the JSON file to __objects only if the JSON file
-        (__file_path) exists ; otherwise, do nothing. If the file doesn’t
-        exist, no exception should be raised)
+        (__file_path) exists; otherwise, do nothing. If the file doesn’t
+        exist, no exception should be raised.
         """
         try:
             with open(self.__file_path, 'r', encoding='utf-8') as myFile:
                 my_obj_dump = myFile.read()
-        except Exception:
+        except FileNotFoundError:
             return
-        objects = eval(my_obj_dump)
-        for (key, value) in objects.items():
-            objects[key] = eval(key.split('.')[0] + '(**value)')
-        self.__objects = objects
+
+        if my_obj_dump:
+            objects = json.loads(my_obj_dump)
+            for key, value in objects.items():
+                class_name = key.split('.')[0]
+                objects[key] = globals()[class_name](**value)
+            self.__objects = objects
 
     def delete(self, obj):
         """Deletes obj from __objects
